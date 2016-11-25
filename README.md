@@ -13,6 +13,7 @@ This script needs 5 command line arguments
  5 - password for pge.com
  </pre>
  so it would look something like this
+ <br>
  casperjs pge.js 11/22/2016 11/23/2016 /tmp somePgeUser somePgePassword
 
 Project also includes a utility shell script which sets path. Make sure to modify script to add path to casperjs and phantomjs. Without them script will not run.
