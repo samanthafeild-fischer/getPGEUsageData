@@ -1,5 +1,6 @@
 # getPGEUsageData
-PGE has an API for downloading usage data. However that api doesn't support standalone downloads. Their API requires you to setup a website and do cert auth and webhooks implementation. That blocks out individual enthusiasts who want to download data programmatically for their own personal usage.
+PGE has an API for downloading usage data. However that api doesn't support standalone downloads. 
+Their API requires you to setup a website and do cert auth and webhooks implementation. That blocks out individual enthusiasts who want to download data programmatically for their own personal usage.
 
 So I created this casperjs script which downloads  usage data from PGE's website in CSV format.
 
