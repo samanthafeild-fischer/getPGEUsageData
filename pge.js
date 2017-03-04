@@ -1,13 +1,4 @@
-// Casperjs script to download your PGE usage data from PGE's website
-// this script needs 5 command line arguments
-// 1 - starting date from which you want data in mm/dd/yyyy format
-// 2 - end date from which you want data in mm/dd/yyyy format
-// 3 - absolute path of folder where you want to download the file
-// 4 - username for pge.com
-// 5 - password for pge.com
-// so it would look something like this
-// casperjs pge.js 11/22/2016 11/23/2016 /tmp somePgeUser somePgePassword
-
+// download file using casper js
 var casper = require('casper').create({
     verbose: true,
     //logLevel: 'debug',
@@ -19,10 +10,10 @@ var casper = require('casper').create({
 });
 
 // start date
-var strt = casper.cli.get(0); // format mm/dd/yyyy
+var strt = casper.cli.get(0); // format yyyy-mm-dd
 
 // end date
-var enddt = casper.cli.get(1); // format mm/dd/yyyy
+var enddt = casper.cli.get(1); // format yyyy-mm-dd
 
 // place to download file
 var fileLocation = casper.cli.get(2);
@@ -43,58 +34,41 @@ casper.on("page.error", function(msg, trace) {
     this.echo("Page Error: " + msg, "ERROR");
 });
 
-// login page
 var url = 'https://www.pge.com/myenergyweb/appmanager/pge/customer/contextual/myusage';
 
-// fill login form
 casper.start(url, function() {
-    // fill the login form
+    // search for 'casperjs' from google form
     this.fill('form[action="/eum/login"]', {
           USER: username,
           PASSWORD:  password
          }, true);
 });
 
-// wait for page to load with green button
-casper.waitForSelector("#content > div:nth-child(4) > div.space-top > div.span-4.last.align-right > div > a",
+// wait for green button to appear
+casper.waitForSelector("#widget-usage-export > div > div > div > div > div > button.green-button > span.button-icon > svg > use",
     function pass () {
-
-      var greenbuttons = this.getElementsInfo("#content > div:nth-child(4) > div.space-top > div.span-4.last.align-right > div > a");
-      var greenButtonLink = greenbuttons[0];
-      // find link which has customer id which use used later when downloading data
-      var match = /customer\/(\d+)\/bill_periods/.exec(greenButtonLink.attributes.href)
-      var customerNumber = match[1];
-
-      // prep up url parameters 
-      var billDate = new Date().getFullYear() + '-' +new Date().getMonth();
+      // start download of file
       var startDate = encodeURIComponent(strt);
       var endDate = encodeURIComponent(enddt);
-      
-      // create string to append to download URL
-      var loadParams = 'bill='+ billDate + '&exportFormat=CSV_AMI&csvFrom=' + startDate + '&csvTo='+ endDate + '&xmlFrom='+ startDate + '&xmlTo=' + endDate;
-  
-      // finally send request to download the usage data in CSV format
-      this.open('https://pge.opower.com/ei/app/modules/customer/' + customerNumber + '/energy/download?' + loadParams);
+      var loadParams = '?format=csv&startDate=' + startDate + '&endDate=' + endDate;
+      this.open('https://pge.opower.com/ei/app/api/usage_export/download' + loadParams);
 
     },
     function fail () {
-        console.log("didn't find")
+        console.log("didn't find green button")
         this.capture('fail.png');
     },
     20000 // timeout limit in milliseconds
 );
 
-// intercept download links
+// save file
 casper.on('resource.received', function (resource) {
      "use strict";
 
-     // if the link is for downloading the file
-     if ((resource.url.indexOf("/energy/download") !== -1) ) {
-        var url, file;
-        url = resource.url;
+     if ((resource.url.indexOf("/download") !== -1) ) {
         try {
             var fs = require('fs');
-            // download the file in 'fileLocation' folder
+            //casper.download(resource.url, fs.workingDirectory+'/'+file);
             casper.download(resource.url, fileLocation);
         } catch (e) {
             this.echo(e);
@@ -102,5 +76,4 @@ casper.on('resource.received', function (resource) {
     }
  })
 
-// finally run the script
 casper.run();
